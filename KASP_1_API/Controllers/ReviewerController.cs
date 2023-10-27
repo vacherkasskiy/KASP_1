@@ -1,4 +1,5 @@
 ﻿using KASP_1_API.Requests;
+using KASP_1_API.Responses;
 using KASP_1_API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace KASP_1_API.Controllers;
 public class ReviewerController : ControllerBase
 {
     private static long _counter = 1;
-    private static readonly Dictionary<long, string[]?> Tasks = new ();
+    private static readonly Dictionary<long, Task<GetTaskStatusResponse>> Tasks = new ();
     private readonly ReviewerService _service;
 
     public ReviewerController(ReviewerService service)
@@ -18,24 +19,35 @@ public class ReviewerController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
     [Route("/review/add")]
-    public async Task<IActionResult> AddTask(AddTaskRequest request)
+    public IActionResult AddTask(AddTaskRequest request)
     {
         var taskId = _counter++;
-        Tasks.Add(taskId, null);
-        var reviewers = await _service.GetReviewers(request.YamlContent, request.CheckPath);
-        Tasks[taskId] = reviewers;
+        var reviewers = _service.GetReviewers(request.YamlContent, request.CheckPath);
+        var task = Task.FromResult(new GetTaskStatusResponse(request.CheckPath, reviewers.Result));
+        Tasks.Add(taskId, task);
 
         return Ok($"Task created with ID: {taskId}");
     }
 
     [HttpGet]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(202)]
+    [ProducesResponseType(400)]
     [Route("/review/get")]
     public IActionResult GetTaskStatus(long taskId)
     {
-        if (Tasks[taskId] == null)
-            return BadRequest("Not ready yet");
-        
-        return Ok(Tasks[taskId]);
+        if (!Tasks.ContainsKey(taskId))
+            return StatusCode(
+                StatusCodes.Status400BadRequest,
+                $"Wrong task id");
+        if (!Tasks[taskId].IsCompleted)
+            return StatusCode(
+                StatusCodes.Status202Accepted,
+                $"Task {taskId} in progress");
+
+        return Ok(Tasks[taskId].Result);
     }
 }

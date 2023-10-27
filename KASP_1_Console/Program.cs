@@ -1,6 +1,6 @@
-﻿using KASP_1_1_Console.Models;
-using YamlDotNet.Serialization;
+﻿using YamlDotNet.Serialization;
 using System.Text.RegularExpressions;
+using KASP_1_Console.Models;
 
 static bool IsAlign(string path, string pattern)
 {
@@ -8,7 +8,7 @@ static bool IsAlign(string path, string pattern)
     var splitPath = path.Split('/');
     var n = splitPath.Length;
     var regex = @"\*\.[a-zA-Z]+";
-    
+
     if (splitPath.Length != splitPattern.Length) return false;
 
     for (var i = 0; i < n; ++i)
@@ -22,7 +22,7 @@ static bool IsAlign(string path, string pattern)
         }
         if (splitPath[i] != splitPattern[i]) return false;
     }
-    
+
     return true;
 }
 
@@ -47,20 +47,34 @@ if (!File.Exists(rulesPath))
     return;
 }
 
-string yamlContent = File.ReadAllText(rulesPath);
+string yamlContent = await File.ReadAllTextAsync(rulesPath);
+
 var config = deserializer.Deserialize<Config>(yamlContent);
 var reviewers = new HashSet<string>();
+
+var tasks = new List<Task>();
 
 foreach (var item in config.Rules)
 {
     foreach (var includedPath in item.Value.IncludedPaths)
     {
-        if (IsAlign(checkPath, includedPath))
-            item.Value.Reviewers.ForEach(x => reviewers.Add(x));
+        var task = Task.Run(() =>
+        {
+            if (IsAlign(checkPath, includedPath))
+            {
+                lock (reviewers)
+                {
+                    item.Value.Reviewers.ForEach(x => reviewers.Add(x));
+                }
+            }
+        });
+
+        tasks.Add(task);
     }
 }
 
-var stringReviewers = "";
-reviewers.ToList().ForEach(x => stringReviewers += $"{x};");
+await Task.WhenAll(tasks);
+
+var stringReviewers = string.Join(";", reviewers.Distinct());
 Console.WriteLine($"path: {checkPath}");
 Console.WriteLine($"reviewers: {stringReviewers}");

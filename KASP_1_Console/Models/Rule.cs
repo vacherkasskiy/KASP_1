@@ -1,6 +1,6 @@
 ﻿using YamlDotNet.Serialization;
 
-namespace KASP_1_1_Console.Models;
+namespace KASP_1_Console.Models;
 
 public class Rule
 {

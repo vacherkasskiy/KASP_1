@@ -5,10 +5,15 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>KASP_1_Console</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="YamlDotNet" Version="13.7.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\KASP_1_API\KASP_1_API.csproj" />
     </ItemGroup>
 
 </Project>

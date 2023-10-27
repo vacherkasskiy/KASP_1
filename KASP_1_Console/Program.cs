@@ -1,42 +1,16 @@
-﻿using YamlDotNet.Serialization;
-using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.Json;
 using KASP_1_Console.Models;
 
-static bool IsAlign(string path, string pattern)
-{
-    var splitPattern = pattern.Split('/');
-    var splitPath = path.Split('/');
-    var n = splitPath.Length;
-    var regex = @"\*\.[a-zA-Z]+";
+// var command = Console.ReadLine();
+// if (command == null || command.Split().Length != 2)
+// {
+//     Console.WriteLine("Wrong input");
+//     return;
+// }
 
-    if (splitPath.Length != splitPattern.Length) return false;
-
-    for (var i = 0; i < n; ++i)
-    {
-        if (splitPattern[i] == "*") continue;
-        if (Regex.IsMatch(splitPattern[i], regex))
-        {
-            if (i != n - 1 || !splitPath[i].Contains('.')) return false;
-            var extension = splitPath[i].Split('.')[^1];
-            return (extension == splitPattern[i].Split('.')[^1]);
-        }
-        if (splitPath[i] != splitPattern[i]) return false;
-    }
-
-    return true;
-}
-
-var command = Console.ReadLine();
-
-if (command == null || command.Split().Length != 2)
-{
-    Console.WriteLine("Wrong input");
-    return;
-}
-
-var deserializer = new DeserializerBuilder().Build();
-var rulesPathRelative = command.Split()[0];
-var checkPath = command.Split()[1];
+var rulesPathRelative = "reviewers.yaml"; // command.Split()[0];
+var checkPath = "folder1/readme.md"; // command.Split()[1];
 
 string rootPath = Path.GetFullPath("../../../../");
 string rulesPath = Path.Combine(rootPath, rulesPathRelative);
@@ -48,33 +22,35 @@ if (!File.Exists(rulesPath))
 }
 
 string yamlContent = await File.ReadAllTextAsync(rulesPath);
+string baseUrl = "https://localhost:7107";
 
-var config = deserializer.Deserialize<Config>(yamlContent);
-var reviewers = new HashSet<string>();
-
-var tasks = new List<Task>();
-
-foreach (var item in config.Rules)
+using (var httpClient = new HttpClient())
 {
-    foreach (var includedPath in item.Value.IncludedPaths)
-    {
-        var task = Task.Run(() =>
-        {
-            if (IsAlign(checkPath, includedPath))
-            {
-                lock (reviewers)
-                {
-                    item.Value.Reviewers.ForEach(x => reviewers.Add(x));
-                }
-            }
-        });
+    var requestObject = new AddTaskRequest(yamlContent, checkPath);
+    string jsonRequest = JsonSerializer.Serialize(requestObject);
+    var requestContent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+    var createTaskResponse = await httpClient.PostAsync($"{baseUrl}/review/add", requestContent);
 
-        tasks.Add(task);
+    if (createTaskResponse.IsSuccessStatusCode)
+    {
+        string responseContent = await createTaskResponse.Content.ReadAsStringAsync();
+        Console.WriteLine(responseContent);
+    }
+    else
+    {
+        Console.WriteLine($"Failed to create task. Status code: {createTaskResponse.StatusCode}");
+    }
+    
+    long taskId = 1;
+    var getTaskResponse = await httpClient.GetAsync($"{baseUrl}/review/get?taskId={taskId}");
+    
+    if (getTaskResponse.IsSuccessStatusCode)
+    {
+        string responseContent = await getTaskResponse.Content.ReadAsStringAsync();
+        Console.WriteLine($"Task status: {responseContent}");
+    }
+    else
+    {
+        Console.WriteLine($"Failed to get task status. Status code: {getTaskResponse.StatusCode}");
     }
 }
-
-await Task.WhenAll(tasks);
-
-var stringReviewers = string.Join(";", reviewers.Distinct());
-Console.WriteLine($"path: {checkPath}");
-Console.WriteLine($"reviewers: {stringReviewers}");

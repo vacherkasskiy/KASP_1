@@ -8,13 +8,12 @@ namespace KASP_1_API.Controllers;
 [Route("[controller]")]
 public class ReviewerController : ControllerBase
 {
-    private long _counter = 1;
-    private readonly Dictionary<long, string[]?> _tasks;
+    private static long _counter = 1;
+    private static readonly Dictionary<long, string[]?> Tasks = new ();
     private readonly ReviewerService _service;
 
     public ReviewerController(ReviewerService service)
     {
-        _tasks = new Dictionary<long, string[]?>();
         _service = service;
     }
 
@@ -23,9 +22,9 @@ public class ReviewerController : ControllerBase
     public async Task<IActionResult> AddTask(AddTaskRequest request)
     {
         var taskId = _counter++;
-        _tasks.Add(taskId, null);
+        Tasks.Add(taskId, null);
         var reviewers = await _service.GetReviewers(request.YamlContent, request.CheckPath);
-        _tasks[taskId] = reviewers;
+        Tasks[taskId] = reviewers;
 
         return Ok($"Task created with ID: {taskId}");
     }
@@ -34,9 +33,9 @@ public class ReviewerController : ControllerBase
     [Route("/review/get")]
     public IActionResult GetTaskStatus(long taskId)
     {
-        if (_tasks[taskId] == null)
+        if (Tasks[taskId] == null)
             return BadRequest("Not ready yet");
         
-        return Ok(_tasks[taskId]);
+        return Ok(Tasks[taskId]);
     }
 }

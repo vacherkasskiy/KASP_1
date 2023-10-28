@@ -38,8 +38,14 @@ static class Program
         string responseContent = await getTaskResponse.Content.ReadAsStringAsync();
 
         if (getTaskResponse.StatusCode == HttpStatusCode.OK)
-            return // $"path: {checkPath}\n" +
-                $"reviewers: {responseContent}";
+        {
+            responseContent = await getTaskResponse.Content.ReadAsStringAsync();
+            TaskResponse taskResponse = JsonSerializer.Deserialize<TaskResponse>(responseContent)!;
+            string reviewers = "";
+            taskResponse.Reviewers.ToList().ForEach(x => reviewers += $"{x}; ");
+            return $"path: {taskResponse.Path}\n" +
+                   $"reviewers: {reviewers}";
+        }
 
         return responseContent;
     }

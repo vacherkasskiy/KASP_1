@@ -1,5 +1,5 @@
-﻿using KASP_1_API.Requests;
-using KASP_1_API.Responses;
+﻿using KASP_1_API.Models;
+using KASP_1_API.Requests;
 using KASP_1_API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +10,7 @@ namespace KASP_1_API.Controllers;
 public class ReviewerController : ControllerBase
 {
     private static long _counter = 1;
-    private static readonly Dictionary<long, Task<GetTaskStatusResponse>> Tasks = new ();
+    private static readonly Dictionary<long, Task<TaskResponse>> Tasks = new ();
     private readonly ReviewerService _service;
 
     public ReviewerController(ReviewerService service)
@@ -26,7 +26,7 @@ public class ReviewerController : ControllerBase
     {
         var taskId = _counter++;
         var reviewers = _service.GetReviewers(request.YamlContent, request.CheckPath);
-        var task = Task.FromResult(new GetTaskStatusResponse(request.CheckPath, reviewers.Result));
+        var task = Task.FromResult(new TaskResponse(request.CheckPath, reviewers.Result));
         Tasks.Add(taskId, task);
 
         return Ok($"Task created with ID: {taskId}");

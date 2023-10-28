@@ -1,13 +1,17 @@
-﻿using System.Net;
+﻿using System.CommandLine;
+using System.CommandLine.NamingConventionBinder;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using KASP_1_Console.Models;
+
+namespace KASP_1_Console;
 
 static class Program
 {
     static string GetFullPath(string relativePath)
     {
-        string rootPath = Path.GetFullPath("../../../../");
+        string rootPath = Path.GetFullPath("../");
         string fullPath = Path.Combine(rootPath, relativePath);
 
         if (!File.Exists(fullPath)) throw new IOException("File does not exists");
@@ -42,7 +46,7 @@ static class Program
             responseContent = await getTaskResponse.Content.ReadAsStringAsync();
             TaskResponse taskResponse = JsonSerializer.Deserialize<TaskResponse>(responseContent)!;
             string reviewers = "";
-            taskResponse.Reviewers.ToList().ForEach(x => reviewers += $"{x}; ");
+            taskResponse.Reviewers!.ToList().ForEach(x => reviewers += $"{x}; ");
             return $"path: {taskResponse.Path}\n" +
                    $"reviewers: {reviewers}";
         }
@@ -50,27 +54,11 @@ static class Program
         return responseContent;
     }
 
-    static async Task PrintGetStatus(string baseUrl, string command)
+    static async Task PrintAddStatus(string baseUrl, string yamlPath, string checkPath)
     {
-        var splitCommand = command.Split();
-
-        if (!int.TryParse(splitCommand[1], out int taskId))
-        {
-            Console.WriteLine("Provided id is not a number");
-            return;
-        }
-
-        Console.WriteLine(await GetTaskStatus(baseUrl, taskId));
-    }
-
-    static async Task PrintAddStatus(string baseUrl, string command)
-    {
-        var rulesPathRelative = command.Split()[0];
-        var checkPath = command.Split()[1];
-
         try
         {
-            var rulesPath = GetFullPath(rulesPathRelative);
+            var rulesPath = GetFullPath(yamlPath);
             string yamlContent = await File.ReadAllTextAsync(rulesPath);
             Console.WriteLine(await AddTask(baseUrl, yamlContent, checkPath));
         }
@@ -80,32 +68,32 @@ static class Program
         }
     }
 
-    static async Task Main()
+    static async Task Main(string[] args)
     {
-        Console.WriteLine("Type \"EXIT\" to stop the program");
         const string baseUrl = "https://localhost:7107"; // поменять на свой
-
-        while (true)
+        var rootCommand = new RootCommand("Review Utility");
+        
+        // Add task code
+        var addCommand = new Command("add", "Add a new task");
+        addCommand.AddArgument(new Argument<string>("yamlPath", "Yaml file location"));
+        addCommand.AddArgument(new Argument<string>("checkPath", "Needed to check file location"));
+        
+        addCommand.Handler = CommandHandler.Create<string, string>(async (yamlPath, checkPath) =>
         {
-            Console.WriteLine("\n---\n");
-            var command = Console.ReadLine();
-            if (command == null)
-            {
-                Console.WriteLine("Wrong input");
-                continue;
-            }
+            await PrintAddStatus(baseUrl, yamlPath, checkPath);
+        });
+        
+        // Get task status code
+        var statusCommand = new Command("status", "Get task status");
+        statusCommand.AddArgument(new Argument<int>("taskId", "The task ID"));
 
-            if (command == "EXIT") return;
-
-            var splitCommand = command.Split();
-            if (splitCommand.Length != 2)
-            {
-                Console.WriteLine("Wrong input");
-                continue;
-            }
-
-            if (command.Split()[0] == "status") await PrintGetStatus(baseUrl, command);
-            else await PrintAddStatus(baseUrl, command);
-        }
+        statusCommand.Handler = CommandHandler.Create<int>(async (taskId) =>
+        {
+            Console.WriteLine(await GetTaskStatus(baseUrl, taskId));
+        });
+        
+        rootCommand.AddCommand(addCommand);
+        rootCommand.AddCommand(statusCommand);
+        await rootCommand.InvokeAsync(args);
     }
 }

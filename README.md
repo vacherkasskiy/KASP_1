@@ -16,7 +16,7 @@
 Пример исполнения утилиты из командной строки:
 
 ```
-reviewer_util reviewers.yaml folder1/readme.md
+reviewer_util add reviewers.yaml folder1/readme.md
 ```
 
 > Task created with ID: 111

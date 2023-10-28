@@ -83,7 +83,7 @@ static class Program
     static async Task Main()
     {
         Console.WriteLine("Type \"EXIT\" to stop the program");
-        const string baseUrl = "https://localhost:7107";
+        const string baseUrl = "https://localhost:7107"; // поменять на свой
 
         while (true)
         {

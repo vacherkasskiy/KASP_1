@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KASP_1_Console", "KASP_1_Console\KASP_1_Console.csproj", "{BE3D963B-135A-4816-BB43-25B0249A2EFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "reviewer_util", "reviewer_util\reviewer_util.csproj", "{BE3D963B-135A-4816-BB43-25B0249A2EFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KASP_1_API", "KASP_1_API\KASP_1_API.csproj", "{1461676A-A81F-49E8-887B-A474ADFE131B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "reviewer_service", "reviewer_service\reviewer_service.csproj", "{1461676A-A81F-49E8-887B-A474ADFE131B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

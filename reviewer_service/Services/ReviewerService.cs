@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using reviewer_service.Models;
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 namespace reviewer_service.Services;
@@ -12,13 +13,7 @@ public class ReviewerService
     {
         _deserializer = new DeserializerBuilder().Build();
     }
-
-    /// <summary>
-    /// Проверяет соответствует ли путь переданному паттерну
-    /// </summary>
-    /// <param name="path">Путь</param>
-    /// <param name="pattern">Паттерн</param>
-    /// <returns>True если путь соответствует паттерну, иначе False</returns>
+    
     private static bool IsAlign(string path, string pattern)
     {
         var splitPattern = pattern.Split('/');
@@ -44,9 +39,19 @@ public class ReviewerService
         return true;
     }
 
-    public async Task<string[]> GetReviewers(string yamlContent, string checkPath)
+    public async Task<TaskResponse> GetTaskResponse(string yamlContent, string checkPath)
     {
-        var config = _deserializer.Deserialize<Config>(yamlContent);
+        Config config;
+
+        try
+        {
+            config = _deserializer.Deserialize<Config>(yamlContent);
+        }
+        catch (YamlException e)
+        {
+            throw new ArgumentException(e.Message);
+        }
+
         var reviewers = new HashSet<string>();
         var tasks = new List<Task>();
 
@@ -66,6 +71,6 @@ public class ReviewerService
         }
 
         await Task.WhenAll(tasks);
-        return reviewers.ToArray();
+        return new TaskResponse(checkPath, reviewers.ToArray());
     }
 }

@@ -20,14 +20,12 @@ public class ReviewerController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(200)]
-    [ProducesResponseType(400)]
     [Route("/review/add")]
     public IActionResult AddTask(AddTaskRequest request)
     {
         var taskId = _counter++;
-        var reviewers = _service.GetReviewers(request.YamlContent, request.CheckPath);
-        var task = Task.FromResult(new TaskResponse(request.CheckPath, reviewers.Result));
-        Tasks.Add(taskId, task);
+        var response = _service.GetTaskResponse(request.YamlContent, request.CheckPath);
+        Tasks.Add(taskId, response);
 
         return Ok($"Task created with ID: {taskId}");
     }
@@ -47,6 +45,10 @@ public class ReviewerController : ControllerBase
             return StatusCode(
                 StatusCodes.Status202Accepted,
                 $"Task {taskId} in progress");
+        if (Tasks[taskId].Exception != null && Tasks[taskId].Exception!.InnerException is ArgumentException)
+            return StatusCode(
+                StatusCodes.Status400BadRequest, 
+                "Provided file content is not yaml");
 
         return Ok(Tasks[taskId].Result);
     }

@@ -14,6 +14,27 @@ public class ReviewerService
         _deserializer = new DeserializerBuilder().Build();
     }
     
+    private async Task<Config> GetYamlObject(string yamlRelativePath)
+    {
+        string yamlPath = Path.Combine(
+            Path.GetPathRoot(Environment.SystemDirectory)!,
+            yamlRelativePath);
+
+        if (!File.Exists(yamlPath)) 
+            throw new IOException("File does not exists");
+        
+        var yamlContent = await File.ReadAllTextAsync(yamlPath);
+        
+        try
+        {
+            return _deserializer.Deserialize<Config>(yamlContent);
+        }
+        catch (YamlException _)
+        {
+            throw new YamlException("Provided file is not yaml");
+        }
+    }
+    
     private static bool IsAlign(string path, string pattern)
     {
         var splitPattern = pattern.Split('/');
@@ -39,13 +60,17 @@ public class ReviewerService
         return true;
     }
 
-    public async Task<TaskResponse> GetTaskResponse(string yamlContent, string checkPath)
+    public async Task<TaskResponse> GetAddTask(string yamlPath, string checkPath)
     {
         Config config;
 
         try
         {
-            config = _deserializer.Deserialize<Config>(yamlContent);
+            config = await GetYamlObject(yamlPath);
+        }
+        catch (IOException e)
+        {
+            throw new ArgumentException(e.Message);
         }
         catch (YamlException e)
         {

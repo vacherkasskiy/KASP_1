@@ -9,24 +9,14 @@ namespace reviewer_util;
 
 internal static class Program
 {
-    private static string GetFullPath(string relativePath)
-    {
-        string path = Path.Combine(
-            Path.GetPathRoot(Environment.SystemDirectory)!,
-            relativePath);
-
-        if (!File.Exists(path)) throw new IOException("File does not exists");
-
-        return path;
-    }
 
     private static async Task<string> AddTask(
         string baseUrl,
-        string yamlContent,
+        string yamlPath,
         string checkPath)
     {
         using var httpClient = new HttpClient();
-        var requestObject = new AddTaskRequest(yamlContent, checkPath);
+        var requestObject = new AddTaskRequest(yamlPath, checkPath);
         var jsonRequest = JsonSerializer.Serialize(requestObject);
         var requestContent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
         var createTaskResponse = await httpClient.PostAsync($"{baseUrl}/review/add", requestContent);
@@ -59,9 +49,7 @@ internal static class Program
     {
         try
         {
-            var rulesPath = GetFullPath(yamlPath);
-            var yamlContent = await File.ReadAllTextAsync(rulesPath);
-            Console.WriteLine(await AddTask(baseUrl, yamlContent, checkPath));
+            Console.WriteLine(await AddTask(baseUrl, yamlPath, checkPath));
         }
         catch (IOException e)
         {

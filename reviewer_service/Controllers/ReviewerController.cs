@@ -24,7 +24,7 @@ public class ReviewerController : ControllerBase
     public IActionResult AddTask(AddTaskRequest request)
     {
         var taskId = _counter++;
-        var response = _service.GetTaskResponse(request.YamlContent, request.CheckPath);
+        var response = _service.GetAddTask(request.YamlPath, request.CheckPath);
         Tasks.Add(taskId, response);
 
         return Ok($"Task created with ID: {taskId}");
@@ -48,7 +48,7 @@ public class ReviewerController : ControllerBase
         if (Tasks[taskId].Exception != null && Tasks[taskId].Exception!.InnerException is ArgumentException)
             return StatusCode(
                 StatusCodes.Status400BadRequest, 
-                "Provided file content is not yaml");
+                Tasks[taskId].Exception!.InnerException!.Message);
 
         return Ok(Tasks[taskId].Result);
     }

@@ -1,13 +1,20 @@
 rules:
   default_rule:
     included_paths:
-      - folder1/*
+      - folder1/* # folder1/text.txt, folder1/README.md, etc
     reviewers:
       - user1
       - user2
+        
+  second_rule:
+    included_paths:
+      - folder2/*/*/*.txt # folder2/docs/texts/smth.txt, folder2/homework/kaspersky/description.txt, etc
+    reviewers:
+      - user4
+      - user5
 
   additional_rule:
     included_paths:
-      - folder1/*.md
+      - folder1/*.md # folder1/README.md, folder1/notes.md, etc
     reviewers:
       - user3

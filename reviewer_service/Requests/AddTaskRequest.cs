@@ -1,3 +1,3 @@
 ﻿namespace reviewer_service.Requests;
 
-public record AddTaskRequest(string YamlContent, string CheckPath);
+public record AddTaskRequest(string YamlPath, string CheckPath);

@@ -1,11 +1,13 @@
 ﻿using System.Text.RegularExpressions;
+using reviewer_service.Exceptions;
 using reviewer_service.Models;
+using reviewer_service.Services.Interfaces;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
 namespace reviewer_service.Services;
 
-public class ReviewerService
+public class ReviewerService : IReviewerService
 {
     private readonly IDeserializer _deserializer;
 
@@ -70,11 +72,11 @@ public class ReviewerService
         }
         catch (IOException e)
         {
-            throw new ArgumentException(e.Message);
+            throw new FileNotFoundException(e.Message);
         }
         catch (YamlException e)
         {
-            throw new ArgumentException(e.Message);
+            throw new ProvidedFileIsNotYamlException(e.Message);
         }
 
         var reviewers = new HashSet<string>();

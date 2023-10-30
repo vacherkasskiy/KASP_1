@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using reviewer_service.Exceptions;
 using reviewer_service.Models;
 using reviewer_service.Requests;
 using reviewer_service.Services;
+using reviewer_service.Services.Interfaces;
 
 namespace reviewer_service.Controllers;
 
@@ -11,9 +13,9 @@ public class ReviewerController : ControllerBase
 {
     private static long _counter = 1;
     private static readonly Dictionary<long, Task<TaskResponse>> Tasks = new();
-    private readonly ReviewerService _service;
+    private readonly IReviewerService _service;
 
-    public ReviewerController(ReviewerService service)
+    public ReviewerController(IReviewerService service)
     {
         _service = service;
     }
@@ -45,10 +47,16 @@ public class ReviewerController : ControllerBase
             return StatusCode(
                 StatusCodes.Status202Accepted,
                 $"Task {taskId} in progress");
-        if (Tasks[taskId].Exception != null && Tasks[taskId].Exception!.InnerException is ArgumentException)
+        if (Tasks[taskId].Exception != null && 
+            Tasks[taskId].Exception!.InnerException is FileNotFoundException)
             return StatusCode(
                 StatusCodes.Status400BadRequest, 
-                Tasks[taskId].Exception!.InnerException!.Message);
+                "Rules file not found");
+        if (Tasks[taskId].Exception != null &&
+            Tasks[taskId].Exception!.InnerException is ProvidedFileIsNotYamlException)
+            return StatusCode(
+                StatusCodes.Status400BadRequest, 
+                "Provided rules file is not yaml");
 
         return Ok(Tasks[taskId].Result);
     }

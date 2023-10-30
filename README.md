@@ -16,7 +16,7 @@
 Пример исполнения утилиты из командной строки:
 
 ```
-reviewer_util reviewers.yaml folder1/readme.md
+reviewer_util add reviewers.yaml folder1/readme.md
 ```
 
 > Task created with ID: 111
@@ -44,7 +44,7 @@ reviewer_util status 111
 Шаги для запуска программы
 - Клонировать репозиторий себе на ПК
 - Открыть решение в `IDE`, поддерживающий язык `C#`
-- Установить в конфигурациях запуска `Environment variables: ASPNETCORE_URLS=https://localhost:7107;http://localhost:5152 ASPNETCORE_ENVIRONMENT=Development`)
+- Установить в конфигурациях запуска `Environment variables: ASPNETCORE_URLS=https://localhost:7107;http://localhost:5152 ASPNETCORE_ENVIRONMENT=Development`
 - Запустить проект `KASP_1_API`
 - В консоли ввести `cd output`
 - Вводить комманды в консоль

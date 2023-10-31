@@ -36,10 +36,8 @@ internal static class Program
         {
             responseContent = await getTaskResponse.Content.ReadAsStringAsync();
             var taskResponse = JsonSerializer.Deserialize<TaskResponse>(responseContent)!;
-            var reviewers = "";
-            taskResponse.Reviewers!.ToList().ForEach(x => reviewers += $"{x}; ");
             return $"path: {taskResponse.Path}\n" +
-                   $"reviewers: {reviewers}";
+                   $"reviewers: {string.Join("; ", taskResponse.Reviewers!)}";
         }
 
         return responseContent;

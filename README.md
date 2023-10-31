@@ -49,12 +49,12 @@ reviewer_util status 111
 - Добавить путь до директории с файлом `reviewer_util.exe` в `PATH`
 
 Команды могут быть двух типов:
-- reviewer_util add <путь к yaml файлу> <путь к файлу для нахождения ревьюверов относительно yaml>
+- reviewer_util add <абсолютный путь к yaml файлу> <путь к файлу для нахождения ревьюверов относительно yaml>
 - reviewer_util status <id задачи>
 
 Пример:
 ```
-reviewer_util add reviewers.yaml folder1/readme.md
+reviewer_util add C:\Documents\Project\reviewers.yaml folder1/readme.md
 reviewer_util status 1
 ```
 
